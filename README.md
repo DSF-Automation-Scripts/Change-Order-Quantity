@@ -1,2 +1,2 @@
-# DSF-Change-Order-Quantity
- A script to change the order quantities of products in DSF
+# Final-Change-Order-Quantity
+ A script written to change the order quantity of products in DSF using Puppeteer
