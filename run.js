@@ -1,10 +1,30 @@
-const constants = require("./constants");
-const credentials = require("./credentials");
-const puppeteer = require("puppeteer");
-const fs = require("fs");
-const readExcelFile = require("read-excel-file/node")
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//1. DEPENDENTS
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//Takes a message, and appends the time to the beginning
+//Puppeteer framework to navigate web
+const puppeteer = require("puppeteer");
+
+//Fs for writing to log and error log
+const fs = require("fs");
+
+//Read-excel-file used to pull information from excel file
+const readExcelFile = require("read-excel-file/node");
+
+//File containing all constants
+const constants = require("./constants");
+
+//File containing credentials
+const credentials = require("./credentials");
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//2. FUNCTIONS
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Function getMessageWithTime
+//Purpose: Takes a message (usually to be logged) and appends the current time to the beginning
+//Returns: Given parameter with time appended to the front
+//Parameters: Message to append time to
 function getMessageWithTime(message) {
     let today = new Date();
     let date = today.getDay() + '/' + today.getMonth() + '/' + today.getFullYear() + ' ';
@@ -29,7 +49,10 @@ function getMessageWithTime(message) {
     return date + message;
 }
 
-//Logs to both the console and to the text log
+//Function logToConsoleAndLog
+//Purpose: Takes a message and logs it to both the console and to a non volatile text file
+//Returns: None
+//Parameters: Message to log
 function logToConsoleAndLog(message) {
     console.log(message);
     fs.appendFile(constants.LOG_PATH, message + '\n', function (err) {
@@ -37,12 +60,18 @@ function logToConsoleAndLog(message) {
     })
 }
 
-//Checks if a given char is a number
+//Function isNumeric
+//Purpose: Checks if a given char/digit is numeric
+//Returns: True if numeric, false otherwise
+//Parameters: Char or single digit
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-//Overwrites the current error log with an updated one
+//Function generateErrorLog
+//Purpose: Delete old error log and update it with current error log
+//Returns: None
+//Parameters: Errors that need logged
 function generateErrorLog(errors) {
     let errorLog = "Failed attempts:" + '\n';
     for(let i = 0; i < errors.length; i++) {
@@ -53,10 +82,18 @@ function generateErrorLog(errors) {
     });
 }
 
-//Main function
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//3. MAIN PROGRAM
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 async function run() {
+
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //3a. SETUP PHASE
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    //Erase old log file
     try {
-    //Erase log file
     fs.writeFile(constants.LOG_PATH, "", (err) => {
         if(err) throw err;
     });
@@ -67,6 +104,7 @@ async function run() {
     logToConsoleAndLog(getMessageWithTime("Launching Chrome"));
     const browser = await puppeteer.launch({
         headless: false,
+        //Remove this to launch Chromium instead of Chrome
         executablePath: constants.CHROME_PATH
     });
     const [page] = await browser.pages();
@@ -76,7 +114,7 @@ async function run() {
     await page.goto(constants.URL);
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
 
-    //Login
+    //Navigate to login dialogue
     await page.click(constants.DSF_SHOW_ADVANCED_LOGIN_OPTIONS, {
         waitUntil: "networkidle0"
     });
@@ -98,6 +136,10 @@ async function run() {
         //If not redirected, invalid credentials
         throw("loginError");
     }
+
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //3b. ACQUIRE INFO PHASE
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     //Grab all data from spreadsheets
     //
@@ -144,6 +186,8 @@ async function run() {
             bookList.push(book);
         }
     });
+
+    //Calculate number of books read
     let numCovBooks = bookList.length;
     logToConsoleAndLog(getMessageWithTime("Read in " + numCovBooks + " books"));
 
@@ -191,6 +235,8 @@ async function run() {
             }
         }
     });
+
+    //Calculate the number of books read
     let numCfBooks = bookList.length - numCovBooks;
     logToConsoleAndLog(getMessageWithTime("Read in " + numCfBooks + " books"));
 
@@ -228,6 +274,8 @@ async function run() {
             }
         }
     });
+
+    //Calculate the number of books read
     let numDbShortRunBooks = bookList.length - (numCovBooks + numCfBooks);
     logToConsoleAndLog(getMessageWithTime("Read in " + numDbShortRunBooks + " books"));
 
@@ -267,9 +315,15 @@ async function run() {
             }
         }
     });
+
+    //Calculate the number of books read
     let numDbPodBooks = bookList.length - (numCovBooks + numCfBooks - numDbShortRunBooks);
     logToConsoleAndLog(getMessageWithTime("Read in " + numDbPodBooks + " books"));
     logToConsoleAndLog(getMessageWithTime("Read in a total of " + bookList.length + " books"));
+
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //3c. SEARCH PHASE
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     //Go through each book and update quantity in DSF
     //
@@ -324,6 +378,10 @@ async function run() {
             }
             else {
                 
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                //3d. EXECUTION PHASE
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
                 //Enter product tab
                 //
                 //This will become the new page that is opened by clicking on the product
@@ -403,6 +461,10 @@ async function run() {
     logToConsoleAndLog(getMessageWithTime("Updating Cedar Fort books"));
     for(let i = numCovBooks; i < numCovBooks + numCfBooks; i++) {
 
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //3c. SEARCH PHASE
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+
         //Make sure DSF isn't loading
         while(await page.$(constants.DSF_SEARCH_SPINNER) !== null) {
             await page.waitForTimeout(100);
@@ -437,6 +499,10 @@ async function run() {
             }
             else {
                 
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                //3d. EXECUTION PHASE
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
                 //Enter product tab
                 //
                 //This will become the new page that is opened by clicking on the product
@@ -516,6 +582,10 @@ async function run() {
     logToConsoleAndLog(getMessageWithTime("Updating Deseret Book Short Run books"));
     for(let i = numCovBooks + numCfBooks; i < numCovBooks + numCfBooks + numDbShortRunBooks; i++) {
         
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //3c. SEARCH PHASE
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
         //Make sure DSF isn't loading
         while(await page.$(constants.DSF_SEARCH_SPINNER) !== null) {
             await page.waitForTimeout(100);
@@ -550,6 +620,10 @@ async function run() {
             }
             else {
                 
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                //3d. EXECUTION PHASE
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
                 //Enter product tab
                 //
                 //This will become the new page that is opened by clicking on the product
@@ -629,6 +703,10 @@ async function run() {
     logToConsoleAndLog(getMessageWithTime("Updating Deseret Book POD books"));
     for (let i = numCovBooks + numCfBooks + numDbShortRunBooks; i < bookList.length; i++) {
         
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //3c. SEARCH PHASE
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
         //Make sure DSF isn't loading
         while(await page.$(constants.DSF_SEARCH_SPINNER) !== null) {
             await page.waitForTimeout(100);
@@ -663,6 +741,10 @@ async function run() {
             }
             else {
                 
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                //3d. EXECUTION PHASE
+                //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
                 //Enter product tab
                 //
                 //This will become the new page that is opened by clicking on the product

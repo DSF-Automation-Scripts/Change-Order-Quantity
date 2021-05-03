@@ -1,13 +1,13 @@
 module.exports = {
     //Path to log and error log
-    LOG_PATH: "C:/Users/mco20/Documents/DSF-Scripts/changeQuantity/log.txt",
-    ERROR_LOG_PATH: "C:/Users/mco20/Documents/DSF-Scripts/changeQuantity/errorLog.txt",
+    LOG_PATH: "<Desired log path>",
+    ERROR_LOG_PATH: "<Desired error log path>",
 
     //System file path to the Chrome executable
-    CHROME_PATH: "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    CHROME_PATH: "<Local path to the Chrome .exe>",
 
     //URL of the DSF products page
-    URL: "",
+    URL: "<URL to the products page of DSF>",
 
     //Show advanced login options button on main login screen of DSF 
     DSF_SHOW_ADVANCED_LOGIN_OPTIONS: "body > div.wrapper.ng-scope > div > div:nth-child(1) > div.login-single.ng-scope > div:nth-child(3) > div > div.modalcontent > form > div:nth-child(4) > a",
@@ -25,9 +25,9 @@ module.exports = {
     DSF_LOGIN_CHECK_ELEMENT: "#displayName_SmartSearchInput",
 
     //Spreadsheet paths
-    COV_SPREADSHEET_PATH: "C:/Users/mco20/OneDrive - BYU/Documents/Print & Mail Digital Clients/Church Covenant/Covenant Product List.xlsx",
-    DB_SPREADSHEET_PATH: "C:/Users/mco20/OneDrive - BYU/Documents/Print & Mail Digital Clients/Church Deseret Book/Desert Book Products.xlsx",
-    CF_SPREADSHEET_PATH: "C:/Users/mco20/OneDrive - BYU/Documents/Print & Mail Digital Clients/Cedar Fort/Goldenbook Short Run available to Cedar Fort.xlsx",
+    COV_SPREADSHEET_PATH: "",
+    DB_SPREADSHEET_PATH: "",
+    CF_SPREADSHEET_PATH: "",
 
     //Covenant spreadsheet indexes
     COV_SPREADSHEET_ISBN_INDEX: 1,
